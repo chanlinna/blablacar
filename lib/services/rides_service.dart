@@ -8,8 +8,8 @@ class RidesService {
   //
   //  filter the rides starting from given departure location
   //
-  static List<Ride> _filterByDeparture(Location departure) {
-    return availableRides
+  static List<Ride> _filterByDeparture(List<Ride> rides, Location departure) {
+    return rides
         .where((r) => r.departureLocation == departure)
         .toList();
   }
@@ -17,9 +17,9 @@ class RidesService {
   //
   //  filter the rides starting for the given requested seat number
   //
-  static List<Ride> _filterBySeatRequested(int requestedSeat) {
-    return availableRides
-        .where((r) => r.availableSeats == requestedSeat)
+  static List<Ride> _filterBySeatRequested(List<Ride> rides, int requestedSeat) {
+    return rides
+        .where((r) => r.availableSeats >= requestedSeat)
         .toList();
   }
 
@@ -27,8 +27,16 @@ class RidesService {
   //  filter the rides   with several optional criteria (flexible filter options)
   //
   static List<Ride> filterBy({Location? departure, int? seatRequested}) {
-    return availableRides.where((a) => _filterByDeparture(departure!))
+    // return availableRides.where((a) => _filterByDeparture(departure!))
+    List<Ride> result = availableRides;
 
-    
+    if (departure != null) {
+      result = _filterByDeparture(result, departure);
+    }
+    if (seatRequested != null) {
+      result = _filterBySeatRequested(result, seatRequested);
+    }
+
+    return result;
   }
 }
