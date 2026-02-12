@@ -1,7 +1,10 @@
+import 'package:blablacar/services/ride_prefs_service.dart';
 import 'package:blablacar/ui/screens/ride_pref/widgets/ride_prefs_input.dart';
 import 'package:blablacar/ui/theme/theme.dart';
 import 'package:blablacar/ui/widgets/actions/bla_button.dart';
 import 'package:blablacar/ui/widgets/display/bla_divider.dart';
+import 'package:blablacar/ui/widgets/inputs/bla_location_picker.dart';
+import 'package:blablacar/utils/animations_util.dart';
 import 'package:blablacar/utils/date_time_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -50,6 +53,38 @@ class _RidePrefFormState extends State<RidePrefForm> {
   // Handle events
   // ----------------------------------
 
+  void onDeparturePressed() async {
+    // 1- Select a location
+    Location? selectedLocation = await Navigator.of(context).push<Location>(
+      AnimationUtils.createBottomToTopRoute(
+        BlaLocationPicker(initLocation: departure),
+      ),
+    );
+
+    // 2- Update the form
+    if (selectedLocation != null) {
+      setState(() {
+        departure = selectedLocation;
+      });
+    }
+  }
+
+  void onArrivalPressed() async {
+    // 1- Select a location
+    Location? selectedLocation = await Navigator.of(context).push<Location>(
+      AnimationUtils.createBottomToTopRoute(
+        BlaLocationPicker(initLocation: arrival),
+      ),
+    );
+
+    // 2- Update the form
+    if (selectedLocation != null) {
+      setState(() {
+        arrival = selectedLocation;
+      });
+    }
+  }
+
   void onSwitchLocation() {
     setState(() {
       if (departure != null && arrival != null) {
@@ -69,8 +104,8 @@ class _RidePrefFormState extends State<RidePrefForm> {
         requestedSeats: requestedSeats,
       );
 
-      Navigator.pop(context, pref);
-    }
+      RidePrefsService.selectedRidePref = pref;
+    } 
   }
 
   bool get isValid =>
@@ -79,16 +114,20 @@ class _RidePrefFormState extends State<RidePrefForm> {
   // ----------------------------------
   // Compute the widgets rendering
   // ----------------------------------
-  String get departureLabel => departure != null ? departure!.name : "Leaving from";
+  String get departureLabel =>
+      departure != null ? departure!.name : "Leaving from";
   String get arrivalLabel => arrival != null ? arrival!.name : "Going to";
 
   bool get showDeparturePLaceHolder => departure == null;
   bool get showArrivalPLaceHolder => arrival == null;
 
   final now = DateTime.now();
-  String get dateLabel => (departureDate.year == now.year && departureDate.month == now.month && departureDate.day == now.day)
-    ? "Today" 
-    : DateTimeUtils.formatDateTime(departureDate);
+  String get dateLabel =>
+      (departureDate.year == now.year &&
+          departureDate.month == now.month &&
+          departureDate.day == now.day)
+      ? "Today"
+      : DateTimeUtils.formatDateTime(departureDate);
   String get numberLabel => requestedSeats.toString();
 
   bool get switchVisible => arrival != null && departure != null;
@@ -101,7 +140,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [ 
+      children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: BlaSpacings.m),
           child: Column(
@@ -110,7 +149,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
                 isInput: showDeparturePLaceHolder,
                 title: departureLabel,
                 leftIcon: Icons.location_on,
-                onPressed: () => {},
+                onPressed: onDeparturePressed,
                 rightIcon: switchVisible ? Icons.swap_vert : null,
                 onRightIconPressed: switchVisible ? onSwitchLocation : null,
               ),
@@ -120,7 +159,7 @@ class _RidePrefFormState extends State<RidePrefForm> {
                 isInput: showArrivalPLaceHolder,
                 title: arrivalLabel,
                 leftIcon: Icons.location_on,
-                onPressed: () => {},
+                onPressed: onArrivalPressed,
               ),
               const BlaDivider(),
 
@@ -140,7 +179,8 @@ class _RidePrefFormState extends State<RidePrefForm> {
           ),
         ),
 
-        BlaButton(type: ButtonType.primary, label: "Search", onTap: onSubmit)
-      ]);
+        BlaButton(type: ButtonType.primary, label: "Search", onTap: onSubmit),
+      ],
+    );
   }
 }
